@@ -174,14 +174,28 @@ def run_pipeline(allocation_mode: str = "fixed",
     # Returns per-bar labels/weights that actually change across the OOS window.
     sentiment_labels_series, sentiment_weights_series = compute_price_sentiment_series(df)
 
+    # Simulated news headlines for VADER NLP visualization in dashboard
+    headlines = [
+        "Reliance Industries Q4 net profit rises 19% to Rs 18,951 crore, beating estimates",
+        "Reliance Jio Q4 net profit rises 13% YoY, ARPU stands at Rs 181.7",
+        "Reliance Retail EBITDA grows 18.5% YoY in Q4; footfalls cross 272 million",
+        "Reliance Industries shares touch all-time high on robust corporate earnings",
+        "RIL to invest Rs 75,000 crore in green energy over next 3 years",
+        "Reliance Retail expands footprint with new store formats and partnerships",
+        "Jio Financial Services to list next week, valuation pegged at Rs 1.6 lakh crore",
+        "Oil prices drop on global growth concerns, impacting RIL refining margins",
+        "Reliance AGM: Mukesh Ambani announces succession plans and new retail targets",
+        "SEBI fines Reliance Industries and Mukesh Ambani over 2007 trading case",
+    ]
+    _, _, vader_scores, _ = analyze_sentiment(headlines)
+
     # Scalar summaries for dashboard compat (computed over OOS period only)
     oos_labels       = sentiment_labels_series.iloc[split_idx:]
     label_counts     = oos_labels.value_counts()
     sentiment_label  = label_counts.index[0] if len(label_counts) > 0 else "NEUTRAL"
     avg_sentiment    = float(sentiment_weights_series.iloc[split_idx:].mean())
     sentiment_weight = avg_sentiment
-    sentiment_scores = sentiment_weights_series.iloc[split_idx:].tolist()
-    headlines        = []   # replaced by time-varying series
+    sentiment_scores = vader_scores  # mapped to VADER scores for dashboard headline table
 
     # 8. REGIME
     df = classify_market_regime(df)
@@ -447,8 +461,9 @@ if __name__ == "__main__" and not IS_STREAMLIT:
 
     print("\n─"*120); print("\nSTRATEGY COMPARISON (5 strategies)")
     cmp = r["comparison"].copy()
-    for col in ["Return %", "Return on Alloc Cap %", "Capital Alloc %", "Kelly Suggested %", "Sharpe", "Max DD %", "Win Rate %"]:
+    for col in ["Return %", "Return on Alloc Cap %", "Capital Alloc %", "Kelly Suggested %", "Sharpe", "Sortino", "Calmar", "Max DD %", "Win Rate %"]:
         cmp[col] = cmp[col].apply(lambda x: "N/A" if pd.isna(x) else f"{x:+.2f}")
+    cmp["Profit Factor"] = cmp["Profit Factor"].apply(lambda x: "N/A" if pd.isna(x) else f"{x:.2f}×")
     cmp["Final Value"] = r["comparison"]["Final Value"].apply(lambda x: f"₹{x:,.0f}")
     print(cmp.to_string(index=False))
 

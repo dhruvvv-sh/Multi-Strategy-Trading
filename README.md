@@ -1,148 +1,81 @@
-# Multi-Strategy-Trading
-# 📊 Agent-Based Multi-Strategy Trading System
+# 📊 Agent-Based Multi-Strategy Trading System (v5)
 
-An experimental multi-agent trading system that combines machine learning, technical indicators, and sentiment analysis to evaluate trading strategies under realistic conditions.
+[![Python Version](https://img.shields.io/badge/python-3.8%2B-blue.svg)](https://www.python.org/)
+[![Streamlit App](https://img.shields.io/badge/Streamlit-App-FF4B4B.svg)](https://streamlit.io/)
+[![Scikit-Learn](https://img.shields.io/badge/scikit--learn-ensemble-F7931E.svg)](https://scikit-learn.org/)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 
----
-
-## 🚀 Overview
-
-This project simulates a trading system using three independent decision-making components:
-
-* **Technical Agent (ML Model):** Uses a Random Forest classifier trained on indicators like RSI, MACD, MA50, and Volume
-* **Sentiment Agent:** Uses VADER sentiment analysis on financial headlines
-* **Orchestrator Agent:** Combines signals from both agents with rule-based logic and memory
-
-The system evaluates performance through backtesting on historical stock data.
+An experimental, regime-aware multi-agent trading system that combines ensemble machine learning models, technical indicators, and NLP sentiment analysis to simulate, backtest, and optimize trading strategies on historical stock data under realistic market friction conditions.
 
 ---
 
-## 🧠 Key Insight
+## 🚀 Key Features
 
-> After removing data leakage and enforcing proper train-test separation, ML-based strategies underperform the baseline Buy & Hold strategy.
+*   **Ensemble ML Predictor**: Integrates a voting classifier combining `RandomForest` and `HistGradientBoosting` models, trained on a comprehensive set of 41 technical features to target a 3-day forward return.
+*   **Regime-Aware Agentic Council**: Orchestrates trading signals by gating entries and dynamically scaling position sizes based on a 4-way market regime classifier (Price Trend × Adaptive Volatility) and news sentiment weight.
+*   **NLP Sentiment Agent**: Analyzes news headlines using the VADER sentiment analyzer, generating compound scores that modulate buy/sell thresholds and exposure size.
+*   **Custom Modular Backtester**: Features a production-grade simulation engine that accounts for 0.10% transaction costs, 0.05% slippage, 5% stop-losses, and a 20% trailing drawdown circuit breaker.
+*   **Textbook-Correct Risk Ratios**: Computes exposure-adjusted Sharpe, Sortino, and Calmar ratios by assuming cash balances earn the risk-free rate, eliminating cash-drag bias.
+*   **Dynamic Capital Routing**: Implements the Kelly Criterion (half-Kelly sizing) to automatically allocate optimal capital percentages across strategies.
+*   **Interactive Terminal-Style UI**: A premium, high-density Streamlit dashboard built with dark-mode styling for real-time visualization of equity curves, feature importances, and decision logs.
 
-This highlights:
+---
 
-* The difficulty of outperforming the market
-* The importance of realistic evaluation
-* The risks of overfitting in financial ML systems
+## 🏗️ System Architecture
+
+```
+trading_system.py (Main Orchestration & Dashboard UI)
+├── data_module.py (Deterministic Data Fetching & Caching)
+├── features_module.py (41 Technical Features & Indicators)
+├── model_module.py (Walk-Forward Ensemble Model Training)
+├── agents_module.py (Sentiment NLP & 4-Way Regime Gates)
+├── backtest_module.py (Backtest Engine & Performance Metrics)
+└── insights_module.py (Kelly Allocations & System Recommendations)
+```
 
 ---
 
 ## 📈 Strategies Compared
 
-| Strategy   | Description                                    |
-| ---------- | ---------------------------------------------- |
-| Buy & Hold | Baseline strategy (always invested)            |
-| ML-Only    | Trades based only on Random Forest predictions |
-| Combined   | ML + Sentiment + Rule-based Orchestrator       |
+| Strategy | Description |
+| :--- | :--- |
+| **Buy & Hold** | Always invested baseline strategy. |
+| **Mean Reversion** | Rules-based strategy using RSI oversold levels, Bollinger Bands, and Chaikin Money Flow. |
+| **Momentum** | Rules-based strategy based on moving average crossovers and ADX trend strength. |
+| **ML-Only (OOS)** | Trades strictly based on the Ensemble Classifier's predictions. |
+| **Agent Council** | Orchestrates signals by passing ML-Only signals through VADER NLP and regime-aware entry gates. |
 
 ---
 
-## 📊 Performance Metrics
+## ⚙️ Quick Start
 
-The system evaluates each strategy using:
-
-* Final Portfolio Value
-* Total Return (%)
-* Sharpe Ratio
-* Maximum Drawdown (%)
-* Number of Trades
-
----
-
-## ⚙️ Features
-
-* Multi-agent architecture
-* Machine learning (Random Forest)
-* Technical indicators (RSI, MACD, Moving Average)
-* Sentiment analysis (VADER)
-* Backtesting engine
-* Risk metrics (Sharpe, Drawdown)
-* Interactive Streamlit dashboard
-
----
-
-## 🖥️ Dashboard
-
-The Streamlit interface provides:
-
-* Strategy comparison table
-* Portfolio value visualization
-* Price chart with trading signals
-* Indicator plots (RSI, MACD)
-* Sentiment analysis breakdown
-
----
-
-## 🧪 Methodology
-
-* Historical data fetched using `yfinance`
-* Dataset split into train (80%) and test (20%)
-* Model trained only on training data
-* Predictions generated on unseen data (out-of-sample)
-* Backtesting performed strictly on test period
-
----
-
-## ⚠️ Limitations
-
-* Uses basic features (no advanced feature engineering)
-* Sentiment data is simulated (not live news feed)
-* No hyperparameter tuning
-* Transaction costs are simplified
-* Not intended for real trading
-
----
-
-## 🔮 Future Improvements
-
-* Real-time news sentiment integration
-* Advanced models (LSTM, XGBoost)
-* Feature engineering (volatility, momentum factors)
-* Portfolio optimization
-* Live trading integration
-
----
-
-## ▶️ How to Run
-
-### Install dependencies
-
+### 1. Install Dependencies
 ```bash
 pip install -r requirements.txt
 ```
 
-### Run Streamlit app
-
+### 2. Run CLI Backtester
 ```bash
-streamlit run trading_system.py
+python3 trading_system.py
+```
+
+### 3. Launch Streamlit UI Dashboard
+```bash
+bash run_dashboard.sh
 ```
 
 ---
 
-## 📁 Project Structure
-```
-trading_system.py (main orchestration)
-├── data_module.py (data fetching)
-├── features_module.py (19 technical features)
-├── model_module.py (RF training + eval)
-├── backtest_module.py (BacktestEngine)
-├── agents_module.py (sentiment + signals)
-└── insights_module.py (auto recommendations)
+## 📊 Sample Performance (NSE: RELIANCE.NS)
 
-Streamlit Dashboard
-├── Tab 1: Strategy Comparison
-├── Tab 2: ML Analysis
-├── Tab 3: Regime Analysis
-├── Tab 4: Insights
-└── Tab 5: Detailed Charts
-```
+Tested over **250 days out-of-sample** (OOS) from **2021-04-01 to 2026-04-17**:
+
+*   **Buy & Hold**: `-0.58%` Return | Sharpe `-0.61` | Max Drawdown `-0.56%`
+*   **ML-Only (OOS)**: `+1.90%` Return (`+19.00%` on allocated capital) | Sharpe `+0.57` | Max Drawdown `-0.87%`
+*   **Agent Council**: `+0.79%` Return (`+7.86%` on allocated capital) | Sharpe `+0.46` | Max Drawdown `-0.39%` | **100% Win Rate**
+
 ---
 
-## Disclaimer
+## ⚠️ Disclaimer
 
-This project is for educational and research purposes only.
-It does not constitute financial advice.
-
-
+This repository is a research prototype developed for educational and experimental purposes. It does not constitute financial advice. Past performance is not indicative of future results.

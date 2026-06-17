@@ -266,8 +266,16 @@ def combine_signals(
         reason       = "NO_SIGNAL"
 
         # ── BUY ──────────────────────────────────────────────────────────────
+        # Regime-aware entry gates: BEAR_HIGH_VOL blocks entry, BEAR_LOW_VOL requires ml_prob > 0.65
+        is_regime_allowed = True
+        if reg == "BEAR_HIGH_VOL":
+            is_regime_allowed = False
+        elif reg == "BEAR_LOW_VOL" and ml_prob <= 0.65:
+            is_regime_allowed = False
+
         if (
-            not pd.isna(ml_sig)
+            is_regime_allowed
+            and not pd.isna(ml_sig)
             and int(ml_sig) == 1
             and ml_prob > buy_threshold          # more selective than ML (0.60 vs 0.55)
             and not sentiment_blocks_buy         # time-varying STRONG_BEAR = no entry

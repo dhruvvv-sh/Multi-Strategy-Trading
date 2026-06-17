@@ -50,7 +50,7 @@ class BacktestEngine:
                             the 20% drawdown circuit-breaker still fire
                             immediately regardless of this setting.
 
-        Returns dict with portfolio_values, portfolio_series, trades, final_value.
+        Returns dict with portfolio_values, portfolio_series, exposures, trades, final_value.
         """
         df = df.copy()
         cash            = self.initial_capital
@@ -61,6 +61,7 @@ class BacktestEngine:
         peak_value      = self.initial_capital   # trailing peak for circuit-breaker
 
         portfolio_values = []
+        exposures        = []
         trades           = []
 
         for i in range(len(df)):
@@ -98,6 +99,7 @@ class BacktestEngine:
             # ── No signal or circuit-breaker active ─────────────────────────
             if pd.isna(signal) or stop_trading:
                 portfolio_values.append(portfolio_value)
+                exposures.append(position * price / portfolio_value if portfolio_value > 0 else 0.0)
                 continue
 
             signal = int(signal)
@@ -145,7 +147,9 @@ class BacktestEngine:
                 entry_price_raw = 0.0
                 days_held       = 0   # reset counter after exit
 
-            portfolio_values.append(cash + position * price)
+            p_val = cash + position * price
+            portfolio_values.append(p_val)
+            exposures.append(position * price / p_val if p_val > 0 else 0.0)
 
         # ── Close open position at period end ──────────────────────────────
         if position > 0:
@@ -163,12 +167,15 @@ class BacktestEngine:
             # Update final portfolio value with closed position
             if portfolio_values:
                 portfolio_values[-1] = proceeds + cash
+            if exposures:
+                exposures[-1] = 0.0
 
         portfolio_series = pd.Series(portfolio_values, index=df.index[:len(portfolio_values)])
 
         return {
             "portfolio_values":  portfolio_values,
             "portfolio_series":  portfolio_series,
+            "exposures":         pd.Series(exposures, index=df.index[:len(exposures)]),
             "trades":            trades,
             "final_value":       portfolio_values[-1] if portfolio_values else self.initial_capital,
             "signal_name":       signal_name,
@@ -181,26 +188,28 @@ class BacktestEngine:
             initial_capital = self.initial_capital
 
         portfolio_series = backtest_result["portfolio_series"]
+        exposures        = backtest_result.get("exposures", pd.Series(0.0, index=portfolio_series.index))
         final_value      = backtest_result["final_value"]
         trades           = backtest_result["trades"]
 
         total_return = (final_value - initial_capital) / initial_capital * 100
 
         daily_returns = portfolio_series.pct_change().dropna()
+        exp_aligned   = exposures.iloc[1:]
 
-        # Sharpe ratio (annualised, risk-free ≈ 4% pa → 0.016% daily)
+        # Sharpe and Sortino ratios (assuming cash earns risk-free interest)
         RF_DAILY = 0.04 / 252
-        sharpe_ratio = 0.0
-        if len(daily_returns) > 1 and daily_returns.std() > 0:
-            sharpe_ratio = float(
-                (daily_returns.mean() - RF_DAILY) / daily_returns.std() * np.sqrt(252))
+        excess_returns = daily_returns - exp_aligned * RF_DAILY
 
-        # Sortino ratio (downside deviation only)
+        sharpe_ratio = 0.0
+        if len(excess_returns) > 1 and excess_returns.std() > 0:
+            sharpe_ratio = float(excess_returns.mean() / excess_returns.std() * np.sqrt(252))
+
         sortino_ratio = 0.0
-        downside = daily_returns[daily_returns < 0]
-        if len(downside) > 1 and downside.std() > 0:
-            sortino_ratio = float(
-                (daily_returns.mean() - RF_DAILY) / downside.std() * np.sqrt(252))
+        negative_excess = np.minimum(excess_returns, 0.0)
+        downside_dev = np.sqrt(np.mean(negative_excess ** 2))
+        if downside_dev > 0:
+            sortino_ratio = float(excess_returns.mean() / downside_dev * np.sqrt(252))
 
         # Max drawdown
         running_max  = portfolio_series.expanding().max()
