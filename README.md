@@ -1,4 +1,4 @@
-# 📊 Agent-Based Multi-Strategy Trading System (v5)
+# Agent-Based Multi-Strategy Trading System (v5)
 
 [![Python Version](https://img.shields.io/badge/python-3.8%2B-blue.svg)](https://www.python.org/)
 [![Streamlit App](https://img.shields.io/badge/Streamlit-App-FF4B4B.svg)](https://streamlit.io/)
@@ -9,7 +9,7 @@ An experimental, regime-aware multi-agent trading system that combines ensemble 
 
 ---
 
-## 🚀 Key Features
+## Key Features
 
 *   **Ensemble ML Predictor**: Integrates a voting classifier combining `RandomForest` and `HistGradientBoosting` models, trained on a comprehensive set of 41 technical features to target a 3-day forward return.
 *   **Regime-Aware Agentic Council**: Orchestrates trading signals by gating entries and dynamically scaling position sizes based on a 4-way market regime classifier (Price Trend × Adaptive Volatility) and news sentiment weight.
@@ -21,7 +21,7 @@ An experimental, regime-aware multi-agent trading system that combines ensemble 
 
 ---
 
-## 🏗️ System Architecture
+## System Architecture
 
 ```
 trading_system.py (Main Orchestration & Dashboard UI)
@@ -35,7 +35,7 @@ trading_system.py (Main Orchestration & Dashboard UI)
 
 ---
 
-## 📈 Strategies Compared
+## Strategies Compared
 
 | Strategy | Description |
 | :--- | :--- |
@@ -47,7 +47,7 @@ trading_system.py (Main Orchestration & Dashboard UI)
 
 ---
 
-## ⚙️ Quick Start
+## Quick Start
 
 ### 1. Install Dependencies
 ```bash
@@ -66,7 +66,7 @@ bash run_dashboard.sh
 
 ---
 
-## 📊 Sample Performance (NSE: RELIANCE.NS)
+## Sample Performance (NSE: RELIANCE.NS)
 
 Tested over **250 days out-of-sample** (OOS) from **2021-04-01 to 2026-04-17**:
 
@@ -76,6 +76,6 @@ Tested over **250 days out-of-sample** (OOS) from **2021-04-01 to 2026-04-17**:
 
 ---
 
-## ⚠️ Disclaimer
+## Disclaimer
 
 This repository is a research prototype developed for educational and experimental purposes. It does not constitute financial advice. Past performance is not indicative of future results.
